@@ -13,6 +13,11 @@
 #define PORT 8787
 #define IP     "127.0.0.1"
 
+void gotoxy(int x, int y)
+{
+	COORD pos = { x, y };
+ 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
 
 ChatClient::ChatClient(const char* addr)
 {
@@ -38,6 +43,7 @@ ChatClient::ChatClient(const char* addr)
 	else
 		printf("connected to server\n");
 
+	send(m_serversocket, id, strlen(id), 0);
 	
 }
 
@@ -61,15 +67,19 @@ void ChatClient::ErrorHandling(char* message)
 void ChatClient::Recieve()
 {
 
-	int    strLen;
+	int    idLen, strLen;
+	char id[30];
 	char message[125];
 	while (true)
 	{
+		idLen = recv(m_serversocket, id, 30 - 1, 0);
 		strLen = recv(m_serversocket, message, sizeof(message) - 1, 0);
-		if (strLen == -1)
+		if (idLen == -1 || strLen == -1)
 			ErrorHandling("read() error!");
+		id[idLen] = 0;
 		message[strLen] = 0;
-		printf("Message from server : %s \n", message);
+		printf("%s : %s \n", id, message);
+
 	}
 }
 
@@ -83,8 +93,12 @@ void ChatClient::Send()
 	while (true)
 	{
 		char input[1024];
-		std::cout << "Message: ";
+		gotoxy(0, 50);
+		printf("Message: ");
 		std::cin >> input;
+		POINT curPos;
+
+
 		send(m_serversocket, input, strlen(input), 0);
 	}
 }

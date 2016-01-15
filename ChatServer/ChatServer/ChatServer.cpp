@@ -53,7 +53,7 @@ ChatServer::ChatServer()
 
 void ChatServer::DisconnectClient(int i)
 {
-	closesocket(m_client_s[i]);	// i번째 소켓 닫음
+	closesocket(m_client_s[i].socket);	// i번째 소켓 닫음
 	if (i == m_chatuser - 1) {
 		m_client_s[i] = m_client_s[m_chatuser - 1];
 		m_chatuser--;		// 총유저수 줄임
@@ -68,8 +68,8 @@ int ChatServer::UserNum(int user)
 	int i;
 
 	for (i = 0; i < m_chatuser; i++) {
-		if (max < m_client_s[i])
-			max = m_client_s[i];
+		if (max < m_client_s[i].socket)
+			max = m_client_s[i].socket;
 	}
 
 	return max;
@@ -83,6 +83,8 @@ void ChatServer::Start()
 	SOCKET clientSock;
 	int	iError;
 	char* start = "Welcome to Black Chat";
+	char* login = "logged in";
+
 	while (1)
 	{
 
@@ -90,7 +92,7 @@ void ChatServer::Start()
 		FD_SET(m_listeningSock, &m_read_fds);	//listen하고 있는 소켓에 입력이 있는지 검사하기 위해 디스크립터 set에 추가
 
 		for (int i = 0; i < m_chatuser; i++) {
-			FD_SET(m_client_s[i], &m_read_fds);
+			FD_SET(m_client_s[i].socket, &m_read_fds);
 		}
 
 		m_maxfd = UserNum(m_listeningSock) + 1;
@@ -113,7 +115,13 @@ void ChatServer::Start()
 				exit(0);
 			}
 
-			m_client_s[m_chatuser] = clientSock;
+// 			//id 정보 recv.
+// 			if (recv(m_listeningSock, m_client_s[m_chatuser].id, sizeof(m_client_s[m_chatuser].id), 0)){
+// 				send(m_listeningSock, login, strlen(login), 0);
+// 			}
+
+			m_client_s[m_chatuser].socket = clientSock;
+			m_client_s[m_chatuser].logged = false;
 			m_chatuser++;
 
 			send(m_listeningSock, start, strlen(start), 0);
@@ -130,8 +138,8 @@ void ChatServer::Start()
 			int n;
 
 			memset(readline, '\0', LINE);
-			if (FD_ISSET(m_client_s[i], &m_read_fds)) {		// 파일 디스크립터 버퍼 확인
-				if ((n = recv(m_client_s[i], readline, LINE, 0)) <= 0) {
+			if (FD_ISSET(m_client_s[i].socket, &m_read_fds)) {		// 파일 디스크립터 버퍼 확인
+				if ((n = recv(m_client_s[i].socket, readline, LINE, 0)) <= 0) {
 					DisconnectClient(i);
 					continue;
 				}
@@ -142,11 +150,17 @@ void ChatServer::Start()
 				}
 
 				readline[n] = 0;
-				for (int j = 0; j < m_chatuser; j++) {	// 브로드캐스팅
 
-					send(m_client_s[j], readline, n + 1, 0);
+				if (!m_client_s[i].logged){
+					strcpy(m_client_s[i].id, readline);
+					m_client_s[i].logged = true;
 				}
-				printf("%s\n", readline);
+				else{
+					for (int j = 0; j < m_chatuser; j++) {	// 브로드캐스팅
+						send(m_client_s[j].socket, m_client_s[i].id, strlen(m_client_s[i].id), 0);
+						send(m_client_s[j].socket, readline, n + 1, 0);
+					}
+				}
 			}
 		}
 	}
