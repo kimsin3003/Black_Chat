@@ -9,11 +9,11 @@ class ChatServer
 public:
 	ChatServer();
 	~ChatServer();
+	void Start();
 
 private:
 	void DisconnectClient(int i);
 	int UserNum(int user);
-	void Accept();
 
 	void BroadCast();
 	int m_maxfd;

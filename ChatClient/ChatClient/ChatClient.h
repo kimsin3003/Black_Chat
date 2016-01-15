@@ -16,5 +16,6 @@ private:
 	WSADATA m_wsaData;
 	SOCKET m_serversocket;
 	SOCKADDR_IN    m_servAddr;
+	char id[20];
 };
 

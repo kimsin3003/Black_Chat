@@ -19,6 +19,7 @@ ChatServer::ChatServer()
 	struct sockaddr_in clientd_addr;	// 소켓 주소
 	WSADATA wsa;		// 윈도우즈 소켓선언
 	int	iError;
+	m_chatuser = 0;
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {		// 소켓 초기화
 		exit(1);
@@ -41,11 +42,14 @@ ChatServer::ChatServer()
 		exit(0);
 	}
 
-	listen(m_listeningSock, 11);
-	m_maxfd = 1;
+	if (listen(m_listeningSock, SOMAXCONN) == -1)
+	{
+		printf("failed to listen");
+	}
+	m_maxfd = m_listeningSock + 1;
 
-	Accept();
 }
+
 
 void ChatServer::DisconnectClient(int i)
 {
@@ -72,12 +76,13 @@ int ChatServer::UserNum(int user)
 }
 
 
-void ChatServer::Accept()
+void ChatServer::Start()
 {
 	struct sockaddr_in clientd_addr;
 	int clilen;
 	SOCKET clientSock;
 	int	iError;
+	char* start = "Welcome to Black Chat";
 	while (1)
 	{
 
@@ -108,12 +113,15 @@ void ChatServer::Accept()
 				exit(0);
 			}
 
-			m_client_s[m_chatuser] = m_listeningSock;
+			m_client_s[m_chatuser] = clientSock;
 			m_chatuser++;
 
-			send(m_listeningSock, "welcome to black chat", 30, 0);
+			send(m_listeningSock, start, strlen(start), 0);
 			printf("%d user connected\n", m_chatuser);
-			listen(m_listeningSock, SOMAXCONN);
+			if (listen(m_listeningSock, SOMAXCONN) == -1)
+			{
+				printf("failed to listen");
+			}
 		}
 
 		//브로드 캐스팅
@@ -133,9 +141,10 @@ void ChatServer::Accept()
 					continue;
 				}
 
-				readline[n] = '\0';
+				readline[n] = 0;
 				for (int j = 0; j < m_chatuser; j++) {	// 브로드캐스팅
-					send(m_client_s[j], readline, n, 0);
+
+					send(m_client_s[j], readline, n + 1, 0);
 				}
 				printf("%s\n", readline);
 			}

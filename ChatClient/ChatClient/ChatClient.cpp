@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <thread>
+#include <iostream>
 
 #pragma comment(lib, "Ws2_32.lib")
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
@@ -28,12 +29,14 @@ ChatClient::ChatClient(const char* addr)
 	m_servAddr.sin_addr.S_un.S_addr = inet_addr(addr);
 	m_servAddr.sin_port = htons(PORT);
 
+	std::cout << "id: ";
+	std::cin >> id;
+
 	if (connect(m_serversocket, (SOCKADDR*)&m_servAddr,
 		sizeof(m_servAddr)) == SOCKET_ERROR)
 		ErrorHandling("connect() error!");
 	else
 		printf("connected to server\n");
-
 
 	
 }
@@ -59,7 +62,7 @@ void ChatClient::Recieve()
 {
 
 	int    strLen;
-	char message[2048];
+	char message[125];
 	while (true)
 	{
 		strLen = recv(m_serversocket, message, sizeof(message) - 1, 0);
@@ -80,7 +83,8 @@ void ChatClient::Send()
 	while (true)
 	{
 		char input[1024];
-		gets(input);
+		std::cout << "Message: ";
+		std::cin >> input;
 		send(m_serversocket, input, strlen(input), 0);
 	}
 }
