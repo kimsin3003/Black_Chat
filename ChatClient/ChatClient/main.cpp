@@ -44,7 +44,7 @@ int _tmain(int argc, char** argv)
 // 	if (connect(hSocket, (SOCKADDR*)&servAddr,
 // 		sizeof(servAddr)) == SOCKET_ERROR)
 // 		ErrorHandling("connect() error!");
-// 
+//
 // 
 // 	std::thread receiver()
 // 	/*

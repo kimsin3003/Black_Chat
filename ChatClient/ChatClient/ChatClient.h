@@ -11,13 +11,18 @@ private:
 
 	void ErrorHandling(char* message);
 	void Recieve();
+	void StoreCurPosition();
+	void GotoBottom();
+	void EraseLine();
+	void GotoChatLine();
 	void Send();
 
 	WSADATA m_wsaData;
 	SOCKET m_serversocket;
 	SOCKADDR_IN    m_servAddr;
-	COORD inputPos;
-	COORD outPutPos;
+	COORD m_BottonPos;
+	COORD m_ChatPos;
+	bool printing;
 	char id[20];
 };
 

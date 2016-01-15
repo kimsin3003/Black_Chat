@@ -11,7 +11,6 @@
 
 
 #define PORT 8787
-#define IP     "127.0.0.1"
 
 void gotoxy(int x, int y)
 {
@@ -22,6 +21,8 @@ void gotoxy(int x, int y)
 ChatClient::ChatClient(const char* addr)
 {
 
+	m_BottonPos.X = 0;
+	m_BottonPos.Y = 19;
 	if (WSAStartup(MAKEWORD(2, 2), &m_wsaData) != 0)
 		ErrorHandling("WSAStartup() error!");
 
@@ -37,6 +38,8 @@ ChatClient::ChatClient(const char* addr)
 	std::cout << "id: ";
 	std::cin >> id;
 
+	system("cls");
+
 	if (connect(m_serversocket, (SOCKADDR*)&m_servAddr,
 		sizeof(m_servAddr)) == SOCKET_ERROR)
 		ErrorHandling("connect() error!");
@@ -44,7 +47,7 @@ ChatClient::ChatClient(const char* addr)
 		printf("connected to server\n");
 
 	send(m_serversocket, id, strlen(id), 0);
-	
+	StoreCurPosition();
 }
 
 void ChatClient::Run()
@@ -78,9 +81,38 @@ void ChatClient::Recieve()
 			ErrorHandling("read() error!");
 		id[idLen] = 0;
 		message[strLen] = 0;
-		printf("%s : %s \n", id, message);
 
+		printing = true;
+		GotoChatLine();
+		printf("%s : %s \n", id, message);
+		StoreCurPosition();
+		printing = false;
 	}
+}
+
+void ChatClient::StoreCurPosition()
+{
+	CONSOLE_SCREEN_BUFFER_INFO con;
+	HANDLE hcon = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hcon != INVALID_HANDLE_VALUE &&	GetConsoleScreenBufferInfo(hcon, &con))
+	{
+		m_ChatPos = con.dwCursorPosition;
+	}
+}
+
+void ChatClient::GotoBottom()
+{
+	gotoxy(m_BottonPos.X, m_BottonPos.Y);
+}
+
+void ChatClient::EraseLine()
+{
+	std::cout << "                                                     " ;
+}
+
+void ChatClient::GotoChatLine()
+{
+	gotoxy(m_BottonPos.X, m_BottonPos.Y - 19);
 }
 
 void ChatClient::Send()
@@ -92,8 +124,12 @@ void ChatClient::Send()
 
 	while (true)
 	{
+		if (printing)
+			continue;
 		char input[1024];
-		gotoxy(0, 50);
+		GotoBottom();
+		EraseLine();
+		GotoBottom();
 		printf("Message: ");
 		std::cin >> input;
 		POINT curPos;

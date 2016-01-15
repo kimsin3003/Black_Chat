@@ -149,7 +149,6 @@ void ChatServer::Start()
 					continue;
 				}
 
-				readline[n] = 0;
 
 				if (!m_client_s[i].logged){
 					strcpy(m_client_s[i].id, readline);
@@ -158,7 +157,7 @@ void ChatServer::Start()
 				else{
 					for (int j = 0; j < m_chatuser; j++) {	// 브로드캐스팅
 						send(m_client_s[j].socket, m_client_s[i].id, strlen(m_client_s[i].id), 0);
-						send(m_client_s[j].socket, readline, n + 1, 0);
+						send(m_client_s[j].socket, readline, n, 0);
 					}
 				}
 			}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <WinSock2.h>
-#define LINE		1024
+#define LINE 100000	
 #define MAXCLIENT	5
 #define	SERV_PORT	8787
 
